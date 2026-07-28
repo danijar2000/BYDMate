@@ -1,5 +1,6 @@
 package com.bydmate.app.cluster
 
+import com.bydmate.app.data.repository.RadioRepository
 import com.bydmate.app.data.vehicle.HelperBootstrap
 import com.bydmate.app.data.vehicle.HelperClient
 import com.bydmate.app.hud.HudController
@@ -21,4 +22,7 @@ interface ClusterEntryPoint {
     fun voiceController(): VoiceController
     fun hudController(): HudController
     fun splitPreferences(): SplitPreferences
+
+    /** Radio state + station list for the floating widget's radio cell. */
+    fun radioRepository(): RadioRepository
 }
