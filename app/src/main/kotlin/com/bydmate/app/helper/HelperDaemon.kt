@@ -7,6 +7,10 @@ import android.graphics.Rect
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.os.Binder
+import android.os.SystemClock
+import android.view.InputDevice
+import android.view.InputEvent
+import android.view.MotionEvent
 import android.view.Surface
 import java.util.concurrent.ConcurrentHashMap
 import android.os.IBinder
@@ -400,6 +404,17 @@ fun main(args: Array<String>) {
                     reply?.writeInt(0)
                     true
                 }
+
+                HelperBinderProtocol.TX_INJECT_MOTION -> runCatching {
+                    val displayId = data.readInt()
+                    val action = data.readInt()
+                    val x = data.readFloat()
+                    val y = data.readFloat()
+                    val downTime = data.readLong()
+                    val ok = injectMotion(displayId, action, x, y, downTime)
+                    reply?.writeInt(if (ok) 0 else -1); reply?.writeInt(0)
+                    true
+                }.getOrElse { reply?.writeInt(-1); reply?.writeInt(0); true }
 
                 HelperBinderProtocol.TX_SET_DISPLAY_DENSITY -> runCatching {
                     val displayId = data.readInt()
@@ -1082,6 +1097,46 @@ internal fun setDisplayDensityCore(displayId: Int, density: Int, exec: (String, 
         exec("wm density \"\$1\" -d \"\$2\"", listOf(density.toString(), displayId.toString())) == 0
     }
 }
+
+/**
+ * Injects a single touch event onto [displayId].
+ *
+ * Two hidden APIs are needed and neither is reachable from the app process: `MotionEvent
+ * .setDisplayId` (an event carries no display otherwise, and the framework routes it to the
+ * default screen) and `InputManager.injectInputEvent` (gated by INJECT_EVENTS, which shell holds).
+ *
+ * [downTime] must be the SAME value for every event of one gesture — DOWN, all MOVEs and UP.
+ * The framework uses it to tie the stream together; a fresh downTime per event is read as a
+ * burst of separate taps, so a drag or a map pan never forms.
+ *
+ * Injection is async (mode 0): we do not wait for the target app to finish handling the event,
+ * because a touchpad streams at display rate and a synchronous round trip per event would stutter.
+ */
+private fun injectMotion(displayId: Int, action: Int, x: Float, y: Float, downTime: Long): Boolean =
+    runCatching {
+        val now = SystemClock.uptimeMillis()
+        val event = MotionEvent.obtain(downTime, now, action, x, y, 0)
+        try {
+            event.source = InputDevice.SOURCE_TOUCHSCREEN
+            MotionEvent::class.java
+                .getMethod("setDisplayId", Int::class.javaPrimitiveType)
+                .invoke(event, displayId)
+            val im = Class.forName("android.hardware.input.InputManager")
+                .getMethod("getInstance")
+                .invoke(null) ?: return false
+            im.javaClass
+                .getMethod("injectInputEvent", InputEvent::class.java, Int::class.javaPrimitiveType)
+                .invoke(im, event, INJECT_MODE_ASYNC) as? Boolean ?: false
+        } finally {
+            event.recycle()
+        }
+    }.getOrElse {
+        System.err.println("WARN: injectMotion($displayId, $action) failed: ${it.message}")
+        false
+    }
+
+/** InputManager.INJECT_INPUT_EVENT_MODE_ASYNC — fire and forget, no wait for the target. */
+private const val INJECT_MODE_ASYNC = 0
 
 private fun setDisplayDensity(displayId: Int, density: Int): Boolean =
     setDisplayDensityCore(displayId, density) { script, args ->

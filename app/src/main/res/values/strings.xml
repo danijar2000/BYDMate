@@ -1317,6 +1317,15 @@
     <string name="settings_section_radio_title">Радио</string>
     <string name="settings_radio_enabled_title">Вкладка «Радио»</string>
     <string name="settings_radio_enabled_desc">Показывать вкладку «Радио» и блок управления на Главной. По умолчанию выключено.</string>
+    <string name="settings_radio_fm_probe_title">Диагностика FM</string>
+    <string name="settings_radio_fm_probe_desc">Проверить, есть ли на этой голове FM-тюнер и через что он доступен. Ничего не меняет, только читает. Результат можно скопировать.</string>
+    <string name="settings_radio_fm_probe_button">Проверить</string>
+    <string name="settings_radio_fm_probe_running">Идёт…</string>
+    <string name="settings_radio_fm_probe_copy">Копировать</string>
+    <string name="settings_radio_fm_open_title">Штатное радио</string>
+    <string name="settings_radio_fm_open_desc">Открыть заводское FM-приложение, если оно есть в системе. Поиск станций делает оно.</string>
+    <string name="settings_radio_fm_open_button">Открыть</string>
+    <string name="settings_radio_fm_open_none">Заводского FM-приложения в системе нет</string>
     <string name="settings_radio_saver_title">Экономить трафик</string>
     <string name="settings_radio_saver_desc">Играть встроенные станции с облегчённого потока. Заметно меньше трафика при небольшой потере качества. Станции без второго потока и ваши собственные не меняются.</string>
     <string name="settings_radio_restore_title">Стартовый набор станций</string>
@@ -1331,4 +1340,10 @@
     <string name="radio_search_sources">Источники: %1$s</string>
     <string name="radio_search_prompt">Введите название и нажмите поиск</string>
     <string name="radio_search_empty">Ничего не найдено</string>
+    <string name="nav_tab_touchpad">Тачпад</string>
+    <string name="touchpad_title">Управление панелью приборов</string>
+    <string name="touchpad_hint">Ведите пальцем по полю — приложение на панели повторит движение. На панели показывается курсор.</string>
+    <string name="touchpad_inactive">Проекция не запущена</string>
+    <string name="touchpad_start_projection">Включите проекцию, чтобы управлять</string>
+    <string name="touchpad_ready">Коснитесь и ведите</string>
 </resources>

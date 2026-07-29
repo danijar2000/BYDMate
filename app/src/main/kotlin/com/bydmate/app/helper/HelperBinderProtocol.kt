@@ -201,6 +201,17 @@ object HelperBinderProtocol {
      */
     val TX_GET_TOP_TASK: Int = IBinder.FIRST_CALL_TRANSACTION + 32            // 33
 
+    /**
+     * Injects one touch event onto an arbitrary display, for the touchpad that drives the
+     * projected app from the centre screen. Request: [int displayId, int action (MotionEvent
+     * ACTION_*), float x, float y, long downTime] -> [int status, int 0].
+     *
+     * Shell uid is what makes this possible at all: `com.android.shell` holds INJECT_EVENTS,
+     * which is why `adb shell input` works and a normal app cannot do this. One event per call —
+     * a gesture is a stream of them, so the client must not hold a lock across the stream.
+     */
+    val TX_INJECT_MOTION: Int = IBinder.FIRST_CALL_TRANSACTION + 33           // 34
+
     /** Hard cap on items per TX_READ_BATCH call (FidMap is 58 today; 128 leaves headroom). */
     const val MAX_BATCH_ITEMS: Int = 128
 

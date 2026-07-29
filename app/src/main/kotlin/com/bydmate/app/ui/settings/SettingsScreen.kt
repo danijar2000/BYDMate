@@ -76,6 +76,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.font.FontFamily
@@ -100,6 +101,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.horizontalScroll
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.bydmate.app.media.FmDiagnostics
 import com.bydmate.app.media.RadioController
 import com.bydmate.app.ui.radio.RadioViewModel
 import com.bydmate.app.ui.radio.toTracks
@@ -117,6 +119,7 @@ import com.bydmate.app.cluster.DEFAULT_TRIGGER_KEYCODE
 import com.bydmate.app.cluster.SteeringWheelKeyService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 import com.bydmate.app.R
 import com.bydmate.app.data.remote.OpenRouterModel
 import com.bydmate.app.data.repository.SettingsRepository
@@ -871,6 +874,9 @@ private fun RadioSection(viewModel: RadioViewModel = hiltViewModel()) {
     val enabled by viewModel.enabled.collectAsStateWithLifecycle()
     val stations by viewModel.stations.collectAsStateWithLifecycle()
     val dataSaver by viewModel.dataSaver.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    var fmReport by remember { mutableStateOf<String?>(null) }
+    var probing by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.presetsRestored.collect { added ->
@@ -915,6 +921,50 @@ private fun RadioSection(viewModel: RadioViewModel = hiltViewModel()) {
         enabled = enabled,
     )
     SettingHint(stringResource(R.string.settings_radio_station_count, stations.size))
+
+    SettingDivider()
+    SettingActionRow(
+        title = stringResource(R.string.settings_radio_fm_probe_title),
+        description = stringResource(R.string.settings_radio_fm_probe_desc),
+        buttonLabel = stringResource(
+            if (probing) R.string.settings_radio_fm_probe_running
+            else R.string.settings_radio_fm_probe_button
+        ),
+        onClick = {
+            if (!probing) {
+                probing = true
+                scope.launch {
+                    fmReport = FmDiagnostics.collect(context)
+                    probing = false
+                }
+            }
+        },
+        enabled = !probing,
+    )
+    SettingDivider()
+    SettingActionRow(
+        title = stringResource(R.string.settings_radio_fm_open_title),
+        description = stringResource(R.string.settings_radio_fm_open_desc),
+        buttonLabel = stringResource(R.string.settings_radio_fm_open_button),
+        onClick = {
+            val target = FmDiagnostics.launchableRadioApps(context).firstOrNull()
+            val intent = target?.let { context.packageManager.getLaunchIntentForPackage(it) }
+            if (intent == null) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.settings_radio_fm_open_none),
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                // Settings runs inside our own task; the stock app must get its own.
+                context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        },
+    )
+
+    fmReport?.let { report ->
+        FmDiagnosticsDialog(report = report, onDismiss = { fmReport = null })
+    }
 }
 
 @Composable

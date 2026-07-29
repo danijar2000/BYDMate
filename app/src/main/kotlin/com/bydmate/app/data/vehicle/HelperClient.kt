@@ -287,6 +287,21 @@ interface HelperClient {
      * false → null, so COVERED detection auto-disarms against old daemons), or no task is found.
      */
     suspend fun getTopTask(): TopTaskInfo?
+
+    /**
+     * Injects one touch event onto [displayId] — the transport behind the cluster touchpad.
+     *
+     * [downTime] identifies the gesture and must be identical across its DOWN, MOVEs and UP,
+     * otherwise the framework sees unrelated taps instead of a drag. Callers stream events as
+     * they arrive; this is deliberately one event per call and takes no lock of its own.
+     */
+    suspend fun injectMotion(
+        displayId: Int,
+        action: Int,
+        x: Float,
+        y: Float,
+        downTime: Long,
+    ): Boolean
 }
 
 @Singleton
@@ -613,6 +628,17 @@ open class HelperClientImpl @Inject constructor() : HelperClient {
             val displayId = reply.readInt()
             TopTaskInfo(pkg, taskId, windowingMode, activityType, displayId)
         }
+
+    override suspend fun injectMotion(
+        displayId: Int,
+        action: Int,
+        x: Float,
+        y: Float,
+        downTime: Long,
+    ): Boolean = statusOk(HelperBinderProtocol.TX_INJECT_MOTION) {
+        it.writeInt(displayId); it.writeInt(action)
+        it.writeFloat(x); it.writeFloat(y); it.writeLong(downTime)
+    }
 
     override suspend fun setAppHidden(packageName: String, hidden: Boolean): Boolean =
         statusOk(HelperBinderProtocol.TX_SET_APP_HIDDEN) {

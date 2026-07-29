@@ -1159,6 +1159,15 @@
     <string name="settings_section_radio_title">Rádio</string>
     <string name="settings_radio_enabled_title">Separador Rádio</string>
     <string name="settings_radio_enabled_desc">Mostrar o separador Rádio e o controlo no Painel. Desligado por predefinição.</string>
+    <string name="settings_radio_fm_probe_title">Diagnóstico de FM</string>
+    <string name="settings_radio_fm_probe_desc">Verificar se esta central tem sintonizador de FM e por onde ele é acessível. Só leitura, não altera nada. O resultado pode ser copiado.</string>
+    <string name="settings_radio_fm_probe_button">Verificar</string>
+    <string name="settings_radio_fm_probe_running">Executando…</string>
+    <string name="settings_radio_fm_probe_copy">Copiar</string>
+    <string name="settings_radio_fm_open_title">Rádio de fábrica</string>
+    <string name="settings_radio_fm_open_desc">Abrir o app de FM de fábrica, se o sistema tiver um. A busca de estações é feita por ele.</string>
+    <string name="settings_radio_fm_open_button">Abrir</string>
+    <string name="settings_radio_fm_open_none">Nenhum app de FM de fábrica no sistema</string>
     <string name="settings_radio_saver_title">Economizar dados</string>
     <string name="settings_radio_saver_desc">Tocar as estações incorporadas pelo fluxo mais leve. Bem menos dados com uma pequena perda de qualidade. Estações sem um segundo fluxo, e as suas, não mudam.</string>
     <string name="settings_radio_restore_title">Conjunto de estações incorporadas</string>
@@ -1173,4 +1182,10 @@
     <string name="radio_search_sources">Fontes: %1$s</string>
     <string name="radio_search_prompt">Digite um nome e toque em buscar</string>
     <string name="radio_search_empty">Nada encontrado</string>
+    <string name="nav_tab_touchpad">Touchpad</string>
+    <string name="touchpad_title">Controle do painel de instrumentos</string>
+    <string name="touchpad_hint">Arraste no campo — o app no painel acompanha. Um cursor é exibido no painel.</string>
+    <string name="touchpad_inactive">A projeção não está ativa</string>
+    <string name="touchpad_start_projection">Inicie a projeção para controlar</string>
+    <string name="touchpad_ready">Toque e arraste</string>
 </resources>

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Radio
+import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -67,6 +68,8 @@ import com.bydmate.app.ui.settings.DonateDialog
 import com.bydmate.app.ui.settings.DonateEntry
 import com.bydmate.app.ui.settings.DonationReminder
 import com.bydmate.app.ui.radio.RadioScreen
+import com.bydmate.app.ui.touchpad.ClusterTouchpadScreen
+import com.bydmate.app.ui.touchpad.rememberMirrorEnabled
 import com.bydmate.app.ui.settings.SettingsScreen
 import com.bydmate.app.ui.settings.UpdateDialog
 import com.bydmate.app.ui.settings.UpdateState
@@ -80,6 +83,7 @@ enum class Screen(val route: String, val labelRes: Int, val icon: ImageVector) {
     Charges("charges", R.string.nav_tab_charges, Icons.Outlined.BatteryChargingFull),
     Automation("automation", R.string.nav_tab_automation, Icons.Outlined.Bolt),
     Radio("radio", R.string.nav_tab_radio, Icons.Outlined.Radio),
+    Touchpad("touchpad", R.string.nav_tab_touchpad, Icons.Outlined.TouchApp),
     Settings("settings", R.string.nav_tab_settings, Icons.Outlined.Settings)
 }
 
@@ -215,7 +219,20 @@ fun AppNavigation(
             }
         }
     }
-    val visibleScreens = Screen.entries.filter { it != Screen.Radio || radioEnabled }
+    // The touchpad only makes sense once cluster projection is switched on — same reasoning as
+    // Radio above, gated on the projection master switch the user already sets in Settings.
+    val mirrorEnabled = rememberMirrorEnabled()
+    LaunchedEffect(mirrorEnabled, currentDestination?.route) {
+        if (!mirrorEnabled && currentDestination?.route == Screen.Touchpad.route) {
+            navController.navigate(Screen.Dashboard.route) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+            }
+        }
+    }
+    val visibleScreens = Screen.entries.filter {
+        (it != Screen.Radio || radioEnabled) && (it != Screen.Touchpad || mirrorEnabled)
+    }
 
     Scaffold(
         containerColor = NavyDark,
@@ -279,6 +296,7 @@ fun AppNavigation(
             }
             composable(Screen.Automation.route) { AutomationScreen() }
             composable(Screen.Radio.route) { RadioScreen() }
+            composable(Screen.Touchpad.route) { ClusterTouchpadScreen() }
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     onNavigateToAgentChat = { navController.navigate("agent_chat") },

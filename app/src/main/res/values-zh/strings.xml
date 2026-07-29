@@ -1277,6 +1277,15 @@
     <string name="settings_section_radio_title">电台</string>
     <string name="settings_radio_enabled_title">电台标签页</string>
     <string name="settings_radio_enabled_desc">显示电台标签页和首页上的控制条。默认关闭。</string>
+    <string name="settings_radio_fm_probe_title">FM 诊断</string>
+    <string name="settings_radio_fm_probe_desc">检测本机是否有 FM 调谐器以及可通过何种方式访问。只读，不做任何更改。结果可复制。</string>
+    <string name="settings_radio_fm_probe_button">检测</string>
+    <string name="settings_radio_fm_probe_running">进行中…</string>
+    <string name="settings_radio_fm_probe_copy">复制</string>
+    <string name="settings_radio_fm_open_title">原厂收音机</string>
+    <string name="settings_radio_fm_open_desc">若系统自带原厂 FM 应用则将其打开。搜台由该应用完成。</string>
+    <string name="settings_radio_fm_open_button">打开</string>
+    <string name="settings_radio_fm_open_none">系统中没有原厂 FM 应用</string>
     <string name="settings_radio_saver_title">节省流量</string>
     <string name="settings_radio_saver_desc">以低码率音源播放内置电台。流量明显减少，音质略有下降。没有第二路音源的电台和您自己添加的电台不受影响。</string>
     <string name="settings_radio_restore_title">内置电台列表</string>
@@ -1291,4 +1300,10 @@
     <string name="radio_search_sources">来源：%1$s</string>
     <string name="radio_search_prompt">输入名称后点击搜索</string>
     <string name="radio_search_empty">未找到结果</string>
+    <string name="nav_tab_touchpad">触控板</string>
+    <string name="touchpad_title">仪表盘控制</string>
+    <string name="touchpad_hint">在此区域滑动，仪表盘上的应用会同步响应。面板上会显示光标。</string>
+    <string name="touchpad_inactive">投屏未启动</string>
+    <string name="touchpad_start_projection">启动投屏后即可控制</string>
+    <string name="touchpad_ready">触摸并拖动</string>
 </resources>

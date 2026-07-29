@@ -1163,6 +1163,15 @@
     <string name="settings_section_radio_title">Radio</string>
     <string name="settings_radio_enabled_title">Radio tab</string>
     <string name="settings_radio_enabled_desc">Show the Radio tab and the dashboard control. Off by default.</string>
+    <string name="settings_radio_fm_probe_title">FM diagnostics</string>
+    <string name="settings_radio_fm_probe_desc">Check whether this head unit has an FM tuner and how it is reachable. Read-only, changes nothing. The result can be copied.</string>
+    <string name="settings_radio_fm_probe_button">Check</string>
+    <string name="settings_radio_fm_probe_running">Running…</string>
+    <string name="settings_radio_fm_probe_copy">Copy</string>
+    <string name="settings_radio_fm_open_title">Stock radio app</string>
+    <string name="settings_radio_fm_open_desc">Open the factory FM app if the system has one. Station search is done by that app.</string>
+    <string name="settings_radio_fm_open_button">Open</string>
+    <string name="settings_radio_fm_open_none">No factory FM app in the system</string>
     <string name="settings_radio_saver_title">Save mobile data</string>
     <string name="settings_radio_saver_desc">Play built-in stations from their lighter stream. Noticeably less data for a small drop in quality. Stations with no second stream, and your own, are unchanged.</string>
     <string name="settings_radio_restore_title">Built-in station set</string>
@@ -1177,4 +1186,10 @@
     <string name="radio_search_sources">Sources: %1$s</string>
     <string name="radio_search_prompt">Type a name and hit search</string>
     <string name="radio_search_empty">Nothing found</string>
+    <string name="nav_tab_touchpad">Touchpad</string>
+    <string name="touchpad_title">Instrument panel control</string>
+    <string name="touchpad_hint">Drag on the pad — the app on the panel follows. A cursor is shown on the panel.</string>
+    <string name="touchpad_inactive">Projection is not running</string>
+    <string name="touchpad_start_projection">Start projection to control it</string>
+    <string name="touchpad_ready">Touch and drag</string>
 </resources>

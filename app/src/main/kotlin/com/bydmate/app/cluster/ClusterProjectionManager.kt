@@ -170,8 +170,88 @@ object ClusterProjectionManager {
     @Volatile var lastFailure: String? = null
         private set
 
+    /**
+     * Where injected touches must land, or null when nothing is projected.
+     *
+     * Never cache this. The VD transport builds a fresh VirtualDisplay on every rebuild — a
+     * restart, a resize, an ignition cycle — and the id changes each time; a stale id silently
+     * swallows every event (the display simply no longer exists). Direct mode instead puts the
+     * app in a freeform window on the real cluster display, so the target is that window's
+     * bounds, not the full panel.
+     */
+    data class InjectionTarget(val displayId: Int, val left: Int, val top: Int, val width: Int, val height: Int)
+
+    fun injectionTarget(context: Context): InjectionTarget? = when {
+        directDisplayId != -1 -> directBounds?.let {
+            InjectionTarget(directDisplayId, it[0], it[1], it[2] - it[0], it[3] - it[1])
+        }
+        remoteDisplayId != -1 -> InjectionTarget(remoteDisplayId, 0, 0, vdWidth, vdHeight)
+        else -> recoverTargetFromPrefs(context)
+    }
+
+    /**
+     * Rebuilds the target after the app process died under a live projection.
+     *
+     * The VirtualDisplay is owned by the long-lived daemon and the projected task stays pinned to
+     * it, so the panel keeps showing the app while our in-memory ids are gone — an app restart or
+     * a reinstall lands exactly here. The persisted id is only a hint: it is trusted only if
+     * DisplayManager still reports that display, otherwise events would be injected into nothing.
+     *
+     * The id is taken on trust. It cannot be validated from here: the VirtualDisplay is created
+     * with FLAG_PRIVATE and owned by the shell-uid daemon, so `DisplayManager.getDisplay` returns
+     * null for it in our process no matter what — an existence check would reject every live
+     * projection. A stale id is harmless in practice: injecting into a display that is gone fails
+     * in the daemon and simply does nothing.
+     *
+     * The window rect and size are unknown on this path (the geometry lived in the dead process),
+     * so both fall back to the cluster panel — correct for the default full-size projection and
+     * only slightly off for a shrunken window, which beats no touchpad at all.
+     */
+    private fun recoverTargetFromPrefs(context: Context): InjectionTarget? {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val vdId = prefs.getInt(KEY_LAST_VD_ID, -1)
+        if (vdId == -1) return null
+
+        remoteDisplayId = vdId
+        vdWidth = clusterWidth
+        vdHeight = clusterHeight
+        if (clusterWindowRect == null) clusterWindowRect = intArrayOf(0, 0, clusterWidth, clusterHeight)
+        Log.i(TAG, "recovered projection target: VirtualDisplay $vdId ${clusterWidth}x$clusterHeight")
+        return InjectionTarget(vdId, 0, 0, clusterWidth, clusterHeight)
+    }
+
     private var overlayView: View? = null
     private var remoteDisplayId: Int = -1
+    /** Size of the live VirtualDisplay — the injection surface in VD mode. */
+    private var vdWidth: Int = 1280
+    private var vdHeight: Int = 480
+    /** Freeform window bounds [l,t,r,b] on the cluster display while direct mode is live. */
+    private var directBounds: IntArray? = null
+
+    /**
+     * Where the projected window sits on the physical cluster panel, [l,t,r,b].
+     *
+     * Distinct from [injectionTarget] on purpose: in VD mode touches go to the VirtualDisplay's
+     * own coordinate space, but the cursor has to be drawn on the panel, over the overlay showing
+     * that display. The two spaces coincide only for a full-size projection.
+     */
+    private var clusterWindowRect: IntArray? = null
+
+    /**
+     * Draws the touchpad's finger dot at a normalized position inside the projected window,
+     * or removes it when [normX] is null. Silently does nothing when nothing is projected.
+     */
+    fun cursorAt(context: Context, normX: Float?, normY: Float = 0f) {
+        val rect = clusterWindowRect
+        if (normX == null || rect == null) {
+            ClusterCursorOverlay.hide()
+            return
+        }
+        val display = resolveClusterDisplay(context) ?: return
+        val x = rect[0] + (normX * (rect[2] - rect[0])).toInt()
+        val y = rect[1] + (normY * (rect[3] - rect[1])).toInt()
+        ClusterCursorOverlay.show(context, display, x, y)
+    }
     // Package actually pinned on the cluster (the one we launchAndForce'd). pullBackToMain tugs THIS
     // back, not the live settings target — the two differ when the user switches the projection app
     // mid-projection, and tugging the new target would strand the old app on the cluster.
@@ -422,6 +502,8 @@ object ClusterProjectionManager {
             val taskId = helper.getTaskId(projectedPackage ?: targetPackage(context)) ?: return true
             val b = freeformBounds(geo)
             helper.setTaskBounds(taskId, b[0], b[1], b[2], b[3])
+            directBounds = b
+            clusterWindowRect = b
             applyDirectDensity(helper, directDisplayId, plan)
             Log.i(TAG, "resize (direct): bounds=[${b[0]},${b[1]},${b[2]},${b[3]}] dpi=${plan.densityDpi}")
             return true
@@ -463,6 +545,10 @@ object ClusterProjectionManager {
         }
         // New projection holds Navi. Commit the new id, then drop the old overlay + VirtualDisplay.
         remoteDisplayId = newVdId
+        vdWidth = plan.bufferWidth
+        vdHeight = plan.bufferHeight
+        clusterWindowRect = intArrayOf(
+            geo.xOffset, geo.yOffset, geo.xOffset + geo.width, geo.yOffset + geo.height)
         saveLastVdId(context, newVdId)
         projectedPackage = pkg
         if (oldVdId != -1) helper.releaseVirtualDisplay(oldVdId)
@@ -903,6 +989,10 @@ object ClusterProjectionManager {
                 hideOverlay(helper); return "projection"
             }
             remoteDisplayId = id
+            vdWidth = plan.bufferWidth
+            vdHeight = plan.bufferHeight
+            clusterWindowRect = intArrayOf(
+                geo.xOffset, geo.yOffset, geo.xOffset + geo.width, geo.yOffset + geo.height)
             saveLastVdId(context, id)
             Log.i(TAG, "VirtualDisplay id=$id ${plan.bufferWidth}x${plan.bufferHeight}@${plan.densityDpi}; launchAndForce $pkg")
             // F-1 / NEW-8-1 second re-arm: launchAndForce can block up to FORCE_TIMEOUT_MS=15s,
@@ -970,6 +1060,8 @@ object ClusterProjectionManager {
         )) {
             FreeformLaunchResult.OK -> {
                 directDisplayId = display.displayId
+                directBounds = bounds
+                clusterWindowRect = bounds
                 prefs.edit().putBoolean(KEY_FREEFORM_REBOOT_PENDING, false).apply()
                 applyDirectDensity(helper, display.displayId, plan)
                 projectedPackage = pkg
@@ -1160,6 +1252,9 @@ object ClusterProjectionManager {
         // Always clear the member: keeps the VD path out of the direct-resize branch even when
         // the density reset fails (daemon dead).
         directDisplayId = -1
+        directBounds = null
+        clusterWindowRect = null
+        ClusterCursorOverlay.hide()
         val resetOk = directId != -1 &&
             runCatching { helper.setDisplayDensity(directId, 0) }.getOrDefault(false)
         val taskId = helper.getTaskId(pkg)
