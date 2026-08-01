@@ -1290,6 +1290,8 @@
     <string name="split_feature_disabled">Разделение экрана выключено в настройках</string>
     <!-- Radio tab -->
     <string name="nav_tab_radio">Радио</string>
+    <string name="nav_tab_stations">Станции</string>
+    <string name="nav_tab_stations_settings">Настр. ЭЗС</string>
     <string name="radio_empty">Пока нет станций. Добавьте первую радиостанцию.</string>
     <string name="radio_add_button">Добавить</string>
     <string name="radio_status_idle">Не воспроизводится</string>

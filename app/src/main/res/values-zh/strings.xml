@@ -1250,6 +1250,8 @@
     <string name="split_feature_disabled">分屏功能已在设置中关闭</string>
     <!-- Radio tab -->
     <string name="nav_tab_radio">电台</string>
+    <string name="nav_tab_stations">充电站</string>
+    <string name="nav_tab_stations_settings">充电站设置</string>
     <string name="radio_empty">还没有电台。请添加第一个电台。</string>
     <string name="radio_add_button">添加</string>
     <string name="radio_status_idle">未播放</string>

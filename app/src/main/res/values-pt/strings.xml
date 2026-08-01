@@ -1132,6 +1132,8 @@
     <string name="split_feature_disabled">Tela dividida desativada nas configurações</string>
     <!-- Radio tab -->
     <string name="nav_tab_radio">Rádio</string>
+    <string name="nav_tab_stations">Estações</string>
+    <string name="nav_tab_stations_settings">Ajustes EVSE</string>
     <string name="radio_empty">Ainda não há estações. Adicione a sua primeira estação de rádio.</string>
     <string name="radio_add_button">Adicionar</string>
     <string name="radio_status_idle">Sem reprodução</string>

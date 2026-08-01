@@ -609,4 +609,36 @@ object AppModule {
         }
     }
 
+    // --- Карта зарядных станций (вкладка «Станции») ---
+    // Отдельная база chargekg.db: слепок сервера полностью заменяется на каждый
+    // ответ 200 и не должен участвовать в миграциях основной схемы bydmate.db.
+
+    @Provides
+    @Singleton
+    fun provideStationsDatabase(@ApplicationContext context: Context): com.bydmate.app.stations.data.StationsDatabase =
+        com.bydmate.app.stations.data.StationsDatabase.build(context)
+
+    @Provides
+    @Singleton
+    fun provideStationsRepository(
+        @ApplicationContext context: Context,
+        db: com.bydmate.app.stations.data.StationsDatabase,
+    ): com.bydmate.app.stations.data.StationsRepository =
+        com.bydmate.app.stations.data.StationsRepository(context, db, com.bydmate.app.stations.data.StationsApi())
+
+    @Provides
+    @Singleton
+    fun provideStationsSettingsRepository(
+        @ApplicationContext context: Context,
+    ): com.bydmate.app.stations.data.StationsSettingsRepository =
+        com.bydmate.app.stations.data.StationsSettingsRepository(context)
+
+    @Provides
+    fun provideStationsConnectivity(@ApplicationContext context: Context): com.bydmate.app.stations.core.StationsConnectivity =
+        com.bydmate.app.stations.core.StationsConnectivity(context)
+
+    @Provides
+    fun provideStationsLocationTracker(@ApplicationContext context: Context): com.bydmate.app.stations.core.StationsLocationTracker =
+        com.bydmate.app.stations.core.StationsLocationTracker(context)
+
 }

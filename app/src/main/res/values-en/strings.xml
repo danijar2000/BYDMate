@@ -1136,6 +1136,8 @@
     <string name="split_feature_disabled">Split screen is disabled in settings</string>
     <!-- Radio tab -->
     <string name="nav_tab_radio">Radio</string>
+    <string name="nav_tab_stations">Stations</string>
+    <string name="nav_tab_stations_settings">EVSE prefs</string>
     <string name="radio_empty">No stations yet. Add your first radio station.</string>
     <string name="radio_add_button">Add</string>
     <string name="radio_status_idle">Not playing</string>

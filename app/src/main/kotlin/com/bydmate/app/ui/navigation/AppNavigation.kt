@@ -25,6 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.DirectionsCar
+import androidx.compose.material.icons.outlined.EvStation
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Radio
 import androidx.compose.material.icons.outlined.TouchApp
@@ -83,6 +85,8 @@ enum class Screen(val route: String, val labelRes: Int, val icon: ImageVector) {
     Charges("charges", R.string.nav_tab_charges, Icons.Outlined.BatteryChargingFull),
     Automation("automation", R.string.nav_tab_automation, Icons.Outlined.Bolt),
     Radio("radio", R.string.nav_tab_radio, Icons.Outlined.Radio),
+    Stations("stations", R.string.nav_tab_stations, Icons.Outlined.EvStation),
+    StationsSettings("stations_settings", R.string.nav_tab_stations_settings, Icons.Outlined.Tune),
     Touchpad("touchpad", R.string.nav_tab_touchpad, Icons.Outlined.TouchApp),
     Settings("settings", R.string.nav_tab_settings, Icons.Outlined.Settings)
 }
@@ -296,6 +300,12 @@ fun AppNavigation(
             }
             composable(Screen.Automation.route) { AutomationScreen() }
             composable(Screen.Radio.route) { RadioScreen() }
+            composable(Screen.Stations.route) {
+                com.bydmate.app.stations.ui.StationsMapScreen()
+            }
+            composable(Screen.StationsSettings.route) {
+                com.bydmate.app.stations.ui.StationsSettingsScreen()
+            }
             composable(Screen.Touchpad.route) { ClusterTouchpadScreen() }
             composable(Screen.Settings.route) {
                 SettingsScreen(
