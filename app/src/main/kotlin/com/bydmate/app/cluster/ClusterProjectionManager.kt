@@ -212,9 +212,9 @@ object ClusterProjectionManager {
         val vdId = prefs.getInt(KEY_LAST_VD_ID, -1)
         if (vdId == -1) return null
 
-        remoteDisplayId = vdId
-        vdWidth = clusterWidth
-        vdHeight = clusterHeight
+        // Read-only on purpose: adopting the hint into remoteDisplayId would make the next
+        // projection treat it as a live VD it owns, fail the mandatory stale release (the id is
+        // not in the current daemon's map) and abort — the hint may only feed injection.
         if (clusterWindowRect == null) clusterWindowRect = intArrayOf(0, 0, clusterWidth, clusterHeight)
         Log.i(TAG, "recovered projection target: VirtualDisplay $vdId ${clusterWidth}x$clusterHeight")
         return InjectionTarget(vdId, 0, 0, clusterWidth, clusterHeight)

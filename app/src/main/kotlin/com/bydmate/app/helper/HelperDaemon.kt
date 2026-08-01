@@ -1355,7 +1355,14 @@ internal fun launchAppCore(
     if (!packageName.matches(Regex("[A-Za-z0-9_.]+"))) return false
     // STANDARD is what `am start` assigns by default — only RECENTS needs the explicit flag.
     val typeFlag = if (activityType == ACTIVITY_TYPE_RECENTS) "--activityType $ACTIVITY_TYPE_RECENTS " else ""
-    val modePrefix = if (windowingMode != null) "--windowingMode $windowingMode $typeFlag--display $displayId " else ""
+    // Display-only prefix (windowingMode == null, displayId != 0): birth the task directly on the
+    // target display. Some apps (2GIS/Qt Grym) silently kill their own process when a LIVE task is
+    // moved across displays, so the VD pipeline must avoid launch-on-main-then-move for them.
+    val modePrefix = when {
+        windowingMode != null -> "--windowingMode $windowingMode $typeFlag--display $displayId "
+        displayId != 0 -> "--display $displayId "
+        else -> ""
+    }
     val component = resolveComponent(packageName)
     if (component != null) {
         // Component is passed as positional "$1" — never interpolated into the sh -c string.
@@ -1606,7 +1613,13 @@ private fun resolveOrLaunchTask(
  * Blocking (Thread.sleep) — runs on a binder threadpool thread; the app side uses a 15s timeout.
  */
 private fun launchAndForce(packageName: String, displayId: Int, width: Int, height: Int): Boolean {
-    val taskId = resolveOrLaunchTask(packageName, activityType = ACTIVITY_TYPE_STANDARD) // ignored: windowingMode == null
+    // displayId is passed through so a not-yet-running app is born directly on the target display
+    // (`am start --display N`) instead of launching on main and being moved: 2GIS's Qt engine
+    // kills its own process on a cross-display move of a live task (on-car 2026-08-01), while
+    // being born on the display works. Already-running apps keep the legacy move path below.
+    val taskId = resolveOrLaunchTask(
+        packageName, windowingMode = null, displayId = displayId, activityType = ACTIVITY_TYPE_STANDARD,
+    )
     if (taskId <= 0) return false
     // Each redirect op is best-effort, mirroring CarControlImpl (every reflective call there returns
     // a status string and swallows its own exception). resizeTask in particular throws "not allowed"
@@ -1619,6 +1632,18 @@ private fun launchAndForce(packageName: String, displayId: Int, width: Int, heig
         runCatching { setTaskBoundsReflect(taskId, 0, 0, width, height) }
         runCatching { setFocusedTaskReflect(taskId) }
         Thread.sleep(200L)
+    }
+    // Death-during-move recovery: if the app killed itself on the cross-display move (2GIS/Qt does;
+    // task vanishes with the process), relaunch it ONCE born directly on the target display — that
+    // path skips the killing move entirely. No retry loop: a second death means the app cannot live
+    // on this display at all and looping would just flash-restart it.
+    if (findTaskId(packageName) <= 0) {
+        val rebornId = resolveOrLaunchTask(
+            packageName, windowingMode = null, displayId = displayId, activityType = ACTIVITY_TYPE_STANDARD,
+        )
+        if (rebornId <= 0) return false
+        runCatching { setTaskBoundsReflect(rebornId, 0, 0, width, height) }
+        runCatching { setFocusedTaskReflect(rebornId) }
     }
     return true
 }
